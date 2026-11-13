@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">EchoDeck</string>
+    <string name="dialer_label">EchoDeck Dialer</string>
+    <string name="notification_channel_calls_name">Incoming Calls</string>
+    <string name="notification_channel_calls_desc">Full-screen alerts and controls for incoming calls</string>
+    <string name="notification_channel_voicemail_name">Answering Machine Messages</string>
+    <string name="notification_channel_voicemail_desc">Notifications when callers leave a recorded message</string>
+    <string name="nav_deck">Deck</string>
+    <string name="nav_inbox">Inbox</string>
+    <string name="nav_greetings">Greetings</string>
+    <string name="nav_dialer">Dialer</string>
+    <string name="action_answer">Answer</string>
+    <string name="action_send_to_machine">Machine</string>
+    <string name="action_decline">Decline</string>
+</resources>

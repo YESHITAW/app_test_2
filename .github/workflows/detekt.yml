@@ -1,0 +1,63 @@
+name: Scan with Detekt
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '35 19 * * 6'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  DETEKT_VERSION: "1.23.8"
+
+jobs:
+  scan:
+    name: Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Download Detekt CLI
+        run: |
+          curl -fsSL \
+            "https://github.com/detekt/detekt/releases/download/v${DETEKT_VERSION}/detekt-cli-${DETEKT_VERSION}-all.jar" \
+            -o /tmp/detekt-cli.jar
+
+      - name: Run Detekt
+        continue-on-error: true
+        run: |
+          java -jar /tmp/detekt-cli.jar \
+            --input "${{ github.workspace }}/app/src/main/java" \
+            --excludes "**/build/**,**/.gradle/**" \
+            --report "sarif:${{ github.workspace }}/detekt.sarif.json"
+
+      - name: Make artifact location URIs relative
+        if: always()
+        run: |
+          if [ -f "${{ github.workspace }}/detekt.sarif.json" ]; then
+            jq \
+              --arg github_workspace "${{ github.workspace }}" \
+              '(.runs[].results[].locations[].physicalLocation.artifactLocation.uri |= if test($github_workspace) then .[($github_workspace | length + 1):] else . end)' \
+              "${{ github.workspace }}/detekt.sarif.json" > "${{ github.workspace }}/detekt.sarif.tmp" \
+            && mv "${{ github.workspace }}/detekt.sarif.tmp" "${{ github.workspace }}/detekt.sarif.json"
+          fi
+
+      - name: Upload SARIF file
+        if: hashFiles('detekt.sarif.json') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ github.workspace }}/detekt.sarif.json
+          checkout_path: ${{ github.workspace }}
